@@ -1,5 +1,8 @@
 FROM vllm/vllm-openai:v0.11.2
 
+LABEL org.opencontainers.image.source="https://github.com/shotsan/vllm-kv-throttle" \
+      org.opencontainers.image.description="Reproducible vLLM KV-cache saturation and scheduler throttling proof"
+
 WORKDIR /experiment
 
 COPY requirements.txt ./
