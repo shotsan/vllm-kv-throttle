@@ -1,0 +1,13 @@
+# Local environments and Python artifacts
+.venv/
+.venv-*/
+__pycache__/
+*.py[cod]
+
+# Downloaded and generated reproducible artifacts
+benchmark-source/
+generated/
+
+# Tool caches
+.pytest_cache/
+.mypy_cache/

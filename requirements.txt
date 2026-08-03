@@ -1,0 +1,5 @@
+# Exact direct runtime dependencies used for the verified run (Python 3.11).
+vllm==0.11.2
+transformers==4.57.1
+fastapi==0.118.0
+starlette==0.48.0
