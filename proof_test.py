@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import json
 import time
 import urllib.request
@@ -23,6 +24,11 @@ def metrics() -> dict:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Sample vLLM scheduler metrics under concurrent load")
+    parser.add_argument("--json", action="store_true",
+                        help="stream raw JSON on every metric change (default: sanitized transition rows)")
+    cli = parser.parse_args()
+
     concurrency = 4
     args = SimpleNamespace(model="TinyLlama/TinyLlama-1.1B-Chat-v1.0", url=URL,
                            max_tokens=282, timeout=600)
@@ -30,13 +36,25 @@ def main() -> None:
     barrier = Barrier(concurrency)
     started = time.monotonic()
     last = None
+    last_key = None
     with ThreadPoolExecutor(max_workers=concurrency) as pool:
         futures = [pool.submit(send, i, barrier, args, prompt) for i in range(concurrency)]
         while not all(future.done() for future in futures):
             current = metrics()
             state = tuple(current.values())
             if state != last:
-                print(json.dumps({"at_seconds": round(time.monotonic() - started, 3), **current}), flush=True)
+                at = round(time.monotonic() - started, 3)
+                if cli.json:
+                    print(json.dumps({"at_seconds": at, **current}), flush=True)
+                else:
+                    running = int(current["num_requests_running"])
+                    waiting = int(current["num_requests_waiting"])
+                    kv = current["kv_cache_usage_perc"]
+                    key = (running, waiting)
+                    # only the rows that matter: an admission/release, or full saturation
+                    if key != last_key or kv == 1.0:
+                        print(f"{at:.3f}s  running={running}  waiting={waiting}  KV={kv * 100:.2f}%", flush=True)
+                        last_key = key
                 last = state
             time.sleep(0.05)
     print(json.dumps({"responses": sorted((future.result() for future in futures),

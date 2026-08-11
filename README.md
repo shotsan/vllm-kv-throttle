@@ -33,7 +33,7 @@ Client completion times were 2.670, 5.291, 7.921, and 10.564 seconds. See [`PROO
 | `prepare_prompt.py` | Selects the longest QA record and trims it by tokenizer |
 | `run_server.sh` | Starts vLLM with the exact KV-cache allocation |
 | `load_test.py` | Sends synchronized concurrent requests |
-| `proof_test.py` | Sends requests while sampling vLLM scheduler metrics |
+| `proof_test.py` | Sends requests while sampling vLLM scheduler metrics (sanitized rows by default; `--json` for the raw stream) |
 | `requirements.txt` | Exact direct dependency versions from the verified run |
 | `Dockerfile` | Reproducible NVIDIA-container execution path |
 | `PROOF.md` | Captured evidence and interpretation |
@@ -151,6 +151,12 @@ Run the integrated proof in terminal 2:
 
 ```bash
 .venv/bin/python proof_test.py
+```
+
+By default this prints sanitized transition rows (matching the [`PROOF.md`](PROOF.md) trace). Add `--json` to stream the raw per-sample JSON instead:
+
+```bash
+.venv/bin/python proof_test.py --json
 ```
 
 Or run only the clients without metric sampling:
