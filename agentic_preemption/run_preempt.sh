@@ -38,7 +38,7 @@ curl -s -m 5 "${auth[@]}" "http://$HOSTPORT/v1/models" | grep -q '"id"' || {
 echo "[run] server is up."
 
 echo "[run] preparing realistic coding task (seed ~${SEED_TOKENS} tok) -> ./generated"
-"$PYTHON" ../agentic_coding/prepare_agent_task.py --model "$MODEL" \
+"$PYTHON" prepare_task.py --model "$MODEL" \
   --seed-tokens "$SEED_TOKENS" --output-dir "$HERE/generated"
 
 echo "[run] launching $WORKERS workers x ${DURATION}s (max_tokens=$MAX_TOKENS)"

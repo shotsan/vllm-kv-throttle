@@ -105,6 +105,7 @@ kills the wrong process. Match by port, or `kill <pid>` explicitly.)
 | `MAX_MODEL_LEN` | 8192 | per-request context (must fit in the blocks) |
 | `MAX_NUM_SEQS` | 10 | max concurrent sequences (**≤ `NUM_GPU_BLOCKS`**) |
 | `GPU_UTIL` | 0.5 | startup memory fraction |
+| `RESERVE_ISL` | 0 | `0` = over-admit/thrash (A/B/C); `1` = admission guard ON → clean queue (Recipe D) |
 
 **Load (`run_preempt.sh`)** — env vars:
 
@@ -113,13 +114,14 @@ kills the wrong process. Match by port, or `kill <pid>` explicitly.)
 | `WORKERS` | 8 | concurrent agents hammering the server |
 | `DURATION` | 300 | run length (seconds) |
 | `MAX_TOKENS` | 4096 | output tokens/request (`ignore_eos`); larger ⇒ 0 completions, smaller ⇒ turnover + more preemptions |
-| `SEED_TOKENS` | 1800 | size of the coding-task file in the prompt |
+| `SEED_TOKENS` | 1800 | prompt (coding-file) size — **the clean-queue-vs-preempt lever**: large (~6000) ⇒ only 1 fits ⇒ clean queue |
 | `TIMEOUT` | 180 | per-request client patience (s); raise to let the oldest request drain |
 
 ## Recipes
 
-The three differ by **`MAX_TOKENS`** (how much each run generates) and **`TIMEOUT`** (how long a
-client waits) — everything else is identical:
+A/B/C run on the **over-admitting** server and differ by **`MAX_TOKENS`** and **`TIMEOUT`**.
+**D** is the opposite — clean queueing (the parent throttle) — and needs a **different server**
+(guard ON) plus a **large prompt**:
 
 ```bash
 # A) "Nothing ever completes" (strongest collapse): big outputs, so no run finishes -> 0 done
@@ -132,10 +134,22 @@ WORKERS=8 DURATION=120 MAX_TOKENS=512 TIMEOUT=180 ./run_preempt.sh
 # C) Prove it's a livelock, not a hang: same big outputs as (A) but give clients long patience,
 #    so the OLDEST request eventually drains while the rest still starve
 WORKERS=8 DURATION=120 MAX_TOKENS=4096 TIMEOUT=1200 ./run_preempt.sh   # then check requests.jsonl
+
+# D) CLEAN QUEUEING (parent behavior): admit request 2 only if the whole thing fits, no preemption.
+#    Requires RESTARTING the server with the admission guard ON, and a LARGE prompt so only 1 fits:
+RESERVE_ISL=1 MAX_MODEL_LEN=8192 NUM_GPU_BLOCKS=10 MAX_NUM_SEQS=10 GPU_UTIL=0.5 ./run_server_preempt.sh
+SEED_TOKENS=6000 MAX_TOKENS=1500 WORKERS=8 DURATION=120 TIMEOUT=180 ./run_preempt.sh
 ```
 
-| | `MAX_TOKENS` | `TIMEOUT` | Expected outcome |
-|---|---|---|---|
-| **A** | 4096 (big) | 180 | 0 completions, all client-timeout — "nothing gets done" |
-| **B** | 512 (small) | 180 | some completions + **preemptions climb** (visible context-throwing) |
-| **C** | 4096 (big) | 1200 | a few oldest requests slowly drain — confirms livelock, not deadlock |
+| | server | `SEED_TOKENS` | `MAX_TOKENS` | `TIMEOUT` | Expected outcome |
+|---|---|---|---|---|---|
+| **A** | over-admit | 1800 | 4096 | 180 | 0 completions, all client-timeout — "nothing gets done" |
+| **B** | over-admit | 1800 | 512 | 180 | some completions + **preemptions climb** (visible context-throwing) |
+| **C** | over-admit | 1800 | 4096 | 1200 | a few oldest requests slowly drain — confirms livelock, not deadlock |
+| **D** | **guard ON** | **6000** | 1500 | 180 | **1 running / 7 waiting, 0 preemptions**, requests drain serially (measured: latencies 36/70/105/139/173 s, goodput 4/min) |
+
+> **Can Recipe D be done with just `WORKERS/DURATION/MAX_TOKENS/TIMEOUT`?** No. `MAX_TOKENS` is
+> *output* and vLLM never reserves output KV at admission, so those four knobs can't gate
+> admission. Clean queueing needs a **large prompt** (`SEED_TOKENS`, so only one fits) **and** the
+> **admission guard ON** (`RESERVE_ISL=1`, a server flag) — i.e. a **server restart**. On the
+> over-admitting server a large prompt can still be chunk-prefill-admitted and then preempted.

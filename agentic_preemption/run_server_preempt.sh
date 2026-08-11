@@ -40,6 +40,14 @@ MAX_NUM_SEQS="${MAX_NUM_SEQS:-10}"
 # memory check; keep it modest so it fits alongside other GPU users.
 GPU_UTIL="${GPU_UTIL:-0.5}"
 KV_DTYPE="${KV_DTYPE:-fp8}"
+# Admission mode:
+#   RESERVE_ISL=0 (default) -> pass --no-scheduler-reserve-full-isl: OVER-ADMIT and
+#     thrash (Recipes A/B/C). A large prompt can be chunk-prefilled and admitted
+#     before it's known to fit, then preempted.
+#   RESERVE_ISL=1 -> omit the flag (vLLM default guard ON): the FULL prompt must fit
+#     in KV before admission, so with large prompts only one fits and the rest queue
+#     cleanly with NO preemption -- the parent's admission control (Recipe D).
+RESERVE_ISL="${RESERVE_ISL:-0}"
 TOOL_PARSER="${TOOL_PARSER:-qwen3_coder}"
 REASONING_PARSER="${REASONING_PARSER:-qwen3}"
 # Load the API key from the study .env if not already exported, so the server key
@@ -55,17 +63,25 @@ API_KEY="${VLLM_API_KEY:-EMPTY}"
 VLLM_BIN="${VLLM_BIN:-/home/ways_lab/Documents/LLM-Network-Study/.venv/bin/vllm}"
 if [ ! -x "$VLLM_BIN" ]; then VLLM_BIN="$(command -v vllm)"; fi
 
-echo "[serve] OVERSUBSCRIPTION mode" >&2
+if [ "$RESERVE_ISL" = "1" ]; then
+  admission_flags=()                                 # guard ON (vLLM default): clean admission
+  admission_desc="reserve-full-isl ON (clean admission / queue)"
+else
+  admission_flags=(--no-scheduler-reserve-full-isl)  # guard OFF: over-admit / thrash
+  admission_desc="--no-scheduler-reserve-full-isl (over-admit / preempt)"
+fi
+
+echo "[serve] $([ "$RESERVE_ISL" = 1 ] && echo CLEAN-ADMISSION || echo OVERSUBSCRIPTION) mode" >&2
 echo "[serve]   model=$MODEL  max_model_len=$MAX_MODEL_LEN" >&2
 echo "[serve]   num_gpu_blocks_override=$NUM_GPU_BLOCKS  max_num_seqs=$MAX_NUM_SEQS" >&2
-echo "[serve]   flags: --no-scheduler-reserve-full-isl --watermark 0.0 (no spec-decode)" >&2
+echo "[serve]   flags: $admission_desc --watermark 0.0 (no spec-decode)" >&2
 
 exec env HF_HUB_OFFLINE="${HF_HUB_OFFLINE:-1}" "$VLLM_BIN" serve \
   "$MODEL" \
   --max-model-len "$MAX_MODEL_LEN" \
   --gpu-memory-utilization "$GPU_UTIL" \
   --num-gpu-blocks-override "$NUM_GPU_BLOCKS" \
-  --no-scheduler-reserve-full-isl \
+  "${admission_flags[@]}" \
   --watermark 0.0 \
   --max-num-seqs "$MAX_NUM_SEQS" \
   --kv-cache-dtype "$KV_DTYPE" \

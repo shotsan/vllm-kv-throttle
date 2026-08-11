@@ -26,20 +26,22 @@ running sequence's blocks and re-queue it (recompute from scratch = its context 
 guarantees the growth that triggers it. This optimism is normally *good* (real requests stop early
 at EOS) — we broke that assumption on purpose.
 
-## The three recipes at a glance
+## The four recipes at a glance
 
-All share the same tiny cache and 8 workers over 120 s; only `max_tokens` and `timeout` change.
-Across all three the cache stays pinned (**~79% avg, 100% peak**) with only **~1–2 running and
-6–7 queued** — what changes is the *symptom* each surfaces.
+All use the same tiny cache and 8 workers over 120 s. **A/B/C** run on the **over-admitting**
+server (guard OFF, small 1,800-token prompt) and differ only by `max_tokens`/`timeout` — they all
+thrash. **D** flips two things — the **admission guard ON** (`RESERVE_ISL=1`, a server restart)
+and a **large 6,000-token prompt** — to get the *opposite*: clean queueing, no preemption.
 
-| Recipe | `max_tokens` | `timeout` | started → completed | preemptions (in-run) | shows | results dir |
-|---|---|---|---|---|---|---|
-| **A** | 4096 | 180 s | 8 → **0** | +1 | goodput collapse — "nothing gets done" | `results/preempt_20260810_184406/` |
-| **B** | 512 | 180 s | 9 → 4 | **+173** | preemption churn — context thrown away repeatedly | `results/preempt_20260810_190411/` |
-| **C** | 4096 | 1200 s | 8 → 2 (at 535 s & 1034 s) | +1 | **livelock, not deadlock** — oldest slowly drains | `results/preempt_20260810_190936/` |
+| Recipe | server / prompt | `max_tokens` | `timeout` | started → completed | preemptions (in-run) | shows | results dir |
+|---|---|---|---|---|---|---|---|
+| **A** | over-admit / 1800 | 4096 | 180 s | 8 → **0** | +1 | goodput collapse — "nothing gets done" | `results/preempt_20260810_184406/` |
+| **B** | over-admit / 1800 | 512 | 180 s | 9 → 4 | **+173** | preemption churn — context thrown away repeatedly | `results/preempt_20260810_190411/` |
+| **C** | over-admit / 1800 | 4096 | 1200 s | 8 → 2 (at 535 s & 1034 s) | +1 | **livelock, not deadlock** — oldest slowly drains | `results/preempt_20260810_190936/` |
+| **D** | **guard ON / 6000** | 1500 | 180 s | 11 → **8** | **0** | **clean queue (parent throttle)** — 1 running, 7 waiting, serial drain | `results/preempt_20260811_082636/` |
 
 Pick **B** to watch the evictions, **C** to prove progress still happens, **A** for the starkest
-"nothing finished."
+"nothing finished," **D** for the well-behaved contrast (admission control, no thrash).
 
 ---
 
@@ -101,6 +103,67 @@ Identical to Recipe A except clients wait up to 20 minutes instead of 180 s:
 fully stops; the oldest request grinds to completion (17 minutes for what normally takes ~30–60 s)
 while everything newer starves. Recipe A only *looked* total because its 180 s patience cut off
 before any request could drain.
+
+---
+
+## Recipe D — clean queueing (the parent throttle, no preemption)
+
+**Results:** `results/preempt_20260811_082636/`
+**Server:** `RESERVE_ISL=1` (admission guard ON) · same tiny KV (11,702 tokens)
+**Config:** 8 workers · 120 s · **`SEED_TOKENS=6000`** (large prompt) · `MAX_TOKENS=1500` · `timeout=180 s`
+
+The mirror image of A/B/C. Two changes flip thrash into clean admission control — they do
+**different jobs**:
+1. **Large prompt** (~6,000 tokens ≈ 3 of the ~5.5 blocks) is the *physical reason* two can't
+   coexist: 2 × 3 blocks = 6 > 5.58, so **only one fits at a time**. (True regardless of any flag.)
+2. **Admission guard ON** (`--no-scheduler-reserve-full-isl` removed) decides what the scheduler
+   *does about that* when request 2 reaches the front: it must check the **whole** prompt fits
+   before admitting → it doesn't (only ~1.5 blocks free) → request 2 **waits cleanly**. With the
+   guard OFF and chunked prefill on, the scheduler checks only request 2's **first chunk** (~1
+   block), which *does* fit → it admits it → then both grow → preemption. So the guard doesn't
+   make "only one fit" — the prompt size does; the guard makes the scheduler **refuse cleanly
+   instead of admitting-then-preempting.**
+
+(If the prompt were small enough to prefill in a *single* chunk, "check first chunk" == "check
+whole prompt" and the guard would be redundant — the large prompt alone would suffice. This
+server has chunked prefill ON, so the guard is the insurance that closes that loophole.)
+
+What we observed — exactly the parent's behavior:
+- **0 preemptions** the entire run (nothing's context ever thrown away).
+- **1 running, 7 waiting** for essentially every sample (running=1 in 460/465 samples).
+- **11 started → 8 completed** (`finish_reason=length`), **goodput 4/min** (vs 0 in Recipe A).
+- **Serial drain:** completion latencies **36 s, 70 s, 105 s, 139 s, 173 s** — rising in ~34 s
+  steps, i.e. requests finishing **one at a time** (the parent's "completion times increase in
+  one-request increments").
+- KV steady at ~74% (one request resident), never oversubscribed; watchdog: **no livelock**.
+
+### Why 3 of the 11 "failed"
+The 3 failures (`w0`, `w3`, `w5` in `requests.jsonl`) are **not errors** — they are client-side
+**180 s timeouts on requests that were still WAITING in the queue**, never admitted:
+`start≈0.00 s`, `latency=180.2 s`, `finish=None`, `TimeoutError('timed out')` — they never even
+started generating.
+
+It's a direct consequence of clean queueing: one request runs at a time and each takes ~34 s, so
+the FCFS queue clears one slot every ~34 s — and **only ~5 fit inside a 180 s patience window**:
+
+| completes at | 36 s | 70 s | 105 s | 139 s | 173 s | ~207 s | ~241 s | ~275 s |
+|---|---|---|---|---|---|---|---|---|
+| request | w4 | w1 | w7 | w6 | w2 | **w0 ✗** | **w3 ✗** | **w5 ✗** |
+
+`w0/w3/w5` sat in positions 6–8; their turn would have come at ~207/241/275 s, but the client gave
+up at 180 s. **Same failure *type* as A/B/C (a client `TIMEOUT`), opposite *cause*:** here it's
+honest **queue latency**, not thrash — `num_preemptions_total = 0`, **zero wasted work**. Raise
+`TIMEOUT` (as in Recipe C's `1200 s`) and all 8 drain cleanly in order.
+
+**Takeaway:** this is scheduler **admission control**, not throttling-by-thrash. Because each
+request nearly fills the cache and the guard refuses to admit a second until the first frees its
+blocks, requests execute **serially with zero wasted work** — the clean counterpart to the
+preemption livelock.
+
+**Can this be done with just `WORKERS/DURATION/MAX_TOKENS/TIMEOUT`?** No. `MAX_TOKENS` is *output*,
+and vLLM reserves no output KV at admission, so those four can't gate admission. Clean queueing
+needs a **large prompt** (`SEED_TOKENS`) *and* the **guard ON** (`RESERVE_ISL=1`, a server flag) —
+so a **server restart** is required.
 
 ---
 

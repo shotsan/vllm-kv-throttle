@@ -37,9 +37,9 @@ from pathlib import Path
 from threading import Event, Lock, Thread
 
 HERE = Path(__file__).resolve().parent
-# Reuse the realistic agentic-coding prompt from the sibling folder.
-sys.path.insert(0, str(HERE.parent / "agentic_coding"))
-from agent_session import SYSTEM_PROMPT, build_first_user  # noqa: E402
+# Realistic agentic-coding prompt, now local to this folder (was ../agentic_coding).
+sys.path.insert(0, str(HERE))
+from prompts import SYSTEM_PROMPT, build_first_user  # noqa: E402
 
 METRICS_PATH = "/metrics"
 

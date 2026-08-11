@@ -1,7 +1,8 @@
 # Agentic preemption: KV-cache oversubscription → livelock
 
-This is the **opposite** of the sibling [`agentic_coding/`](../agentic_coding/) throttle demo.
-There, KV is pinned so exactly one sequence runs and the rest wait cleanly. Here we deliberately
+This is the **opposite** of a KV *throttle* demo (the former sibling `agentic_coding/`, since
+removed): there KV is pinned so exactly one sequence runs and the rest wait cleanly; here we
+deliberately
 **oversubscribe** the KV cache: the scheduler *optimistically admits* several agentic-coding
 requests (their prompts fit), then — because each keeps generating (`ignore_eos`) past what the
 cache can hold — vLLM is forced to **preempt** running sequences, **throwing away a whole run's
@@ -58,7 +59,9 @@ KV cache (flags confirmed in vLLM 0.25.1):
 | Path | Purpose |
 |---|---|
 | `run_server_preempt.sh` | Oversubscription vLLM server (tiny KV, over-admission, no spec-decode) |
-| `deadlock_run.py` | Continuous load (reuses the real `agentic_coding` coding prompt) + `/metrics` sampler + livelock watchdog + summary |
+| `deadlock_run.py` | Continuous load (realistic coding prompt from local `prompts.py`) + `/metrics` sampler + livelock watchdog + summary |
+| `prompts.py` | `SYSTEM_PROMPT` + `build_first_user` + `TASK_INSTRUCTION` (the coding task) |
+| `prepare_task.py` | Generates `generated/agent_seed.py` + `agent_task.json` (the file to refactor) |
 | `run_preempt.sh` | One-shot driver: prepare task → check server → run the load |
 
 ## Run it
