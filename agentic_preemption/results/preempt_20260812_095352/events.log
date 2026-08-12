@@ -1,0 +1,222 @@
+# preemption run  workers=8  duration=120.0s  max_tokens=4096  model=Qwen/Qwen3.6-35B-A3B-FP8
+   0.001s  running=0  waiting=0(cap=0)  KV=  0.00%  done=0
+   1.083s  running=2  waiting=6(cap=6)  KV= 88.89%  done=0   <- ADMIT x2
+   6.292s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+   6.400s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+   6.616s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+   6.724s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+   6.832s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+   7.048s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+   7.156s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+   7.264s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+   7.483s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+   7.594s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+   7.704s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+   7.813s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+   8.030s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+   8.140s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+   8.248s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+   8.466s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+   8.574s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+   8.681s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+   8.895s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+   9.002s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+   9.110s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+   9.218s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+   9.432s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+   9.541s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+   9.649s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+   9.868s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+   9.978s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  10.088s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  10.305s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  10.412s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  10.519s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  10.627s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  10.843s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  10.952s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  11.061s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  11.279s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  11.279s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=11  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  11.389s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  11.497s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  11.497s  --- livelock cleared (a run drained) ---
+  11.714s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  11.714s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=12  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  11.823s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  11.933s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  12.040s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  12.040s  --- livelock cleared (a run drained) ---
+  12.256s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  12.256s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=13  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  12.366s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  12.476s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  12.476s  --- livelock cleared (a run drained) ---
+  12.694s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  12.694s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=14  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  12.804s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  12.913s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  12.913s  --- livelock cleared (a run drained) ---
+  13.129s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  13.129s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=15  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  13.239s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  13.348s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  13.457s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  13.457s  --- livelock cleared (a run drained) ---
+  13.672s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  13.672s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=16  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  13.780s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  13.887s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  13.887s  --- livelock cleared (a run drained) ---
+  14.102s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  14.102s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=17  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  14.210s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  14.318s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  14.318s  --- livelock cleared (a run drained) ---
+  14.532s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  14.532s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=18  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  14.639s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  14.748s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  14.856s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  14.856s  --- livelock cleared (a run drained) ---
+  15.071s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  15.071s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=19  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  15.181s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  15.290s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  15.290s  --- livelock cleared (a run drained) ---
+  15.508s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  15.508s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=20  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  15.618s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  15.727s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  15.727s  --- livelock cleared (a run drained) ---
+  15.945s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  15.945s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=21  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  16.055s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  16.165s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  16.275s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  16.275s  --- livelock cleared (a run drained) ---
+  16.492s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  16.492s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=22  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  16.602s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  16.712s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  16.712s  --- livelock cleared (a run drained) ---
+  16.929s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  16.929s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=23  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  17.039s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  17.148s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  17.148s  --- livelock cleared (a run drained) ---
+  17.365s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  17.365s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=24  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  17.475s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  17.584s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  17.693s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  17.693s  --- livelock cleared (a run drained) ---
+  17.912s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  17.912s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=25  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  18.021s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  18.131s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  18.131s  --- livelock cleared (a run drained) ---
+  18.349s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  18.349s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=26  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  18.459s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  18.568s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  18.568s  --- livelock cleared (a run drained) ---
+  18.787s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  18.787s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=27  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  18.897s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  19.006s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  19.116s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  19.116s  --- livelock cleared (a run drained) ---
+  19.336s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  19.336s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=28  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  19.445s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  19.556s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  19.556s  --- livelock cleared (a run drained) ---
+  19.774s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  19.774s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=29  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  19.884s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  19.993s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  19.993s  --- livelock cleared (a run drained) ---
+  20.211s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  20.211s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=30  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  20.320s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  20.428s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  20.535s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  20.535s  --- livelock cleared (a run drained) ---
+  20.749s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  20.749s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=31  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  20.857s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  20.965s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  20.965s  --- livelock cleared (a run drained) ---
+  21.180s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  21.180s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=32  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  21.288s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  21.395s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  21.395s  --- livelock cleared (a run drained) ---
+  21.608s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  21.608s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=33  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  21.716s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  21.824s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  21.931s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  21.931s  --- livelock cleared (a run drained) ---
+  22.145s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  22.145s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=34  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  22.253s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  22.360s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  22.360s  --- livelock cleared (a run drained) ---
+  22.577s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  22.577s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=35  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  22.687s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  22.795s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  22.904s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  22.904s  --- livelock cleared (a run drained) ---
+  23.121s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  23.121s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=36  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  23.230s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  23.339s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  23.339s  --- livelock cleared (a run drained) ---
+  23.556s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  23.556s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=37  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  23.666s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  23.775s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  23.775s  --- livelock cleared (a run drained) ---
+  23.993s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  23.993s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=38  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  24.104s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  24.213s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  24.213s  --- livelock cleared (a run drained) ---
+  24.539s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  24.539s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=39  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  24.649s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  24.759s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  24.759s  --- livelock cleared (a run drained) ---
+  24.972s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  24.972s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=40  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  25.081s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  25.190s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  25.190s  --- livelock cleared (a run drained) ---
+  25.405s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  25.405s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=41  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  25.514s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  25.622s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  25.731s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  25.731s  --- livelock cleared (a run drained) ---
+  25.945s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  25.945s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=42  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  26.054s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  26.161s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  26.161s  --- livelock cleared (a run drained) ---
+  26.377s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  26.377s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=43  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  26.486s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  26.595s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  26.595s  --- livelock cleared (a run drained) ---
+  26.813s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  26.813s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=44  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  26.922s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  27.031s  running=2  waiting=6(cap=6)  KV=100.00%  done=0
+  27.141s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+  27.141s  --- livelock cleared (a run drained) ---
+  27.358s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  27.358s  *** LIVELOCK DETECTED *** KV=100.0%  running=2 waiting=6  inferred_preemptions=45  completions/10s=0 -> KV is saturated and no run has finished for 10s: admitted runs' context is thrown away / re-queued faster than any drains.
+  27.466s  running=2  waiting=6(cap=6)  KV=100.00%  done=0

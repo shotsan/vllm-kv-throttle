@@ -1,0 +1,37 @@
+# preemption run  workers=8  duration=120.0s  max_tokens=1500  model=Qwen/Qwen3.6-35B-A3B-FP8
+   0.004s  running=0  waiting=0(cap=0)  KV=  0.00%  done=0
+   0.944s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- ADMIT x1
+  35.145s  running=0  waiting=7(cap=7)  KV=  0.00%  done=1   <- COMPLETE x1 + ARRIVE x1
+  35.358s  running=1  waiting=6(cap=6)  KV= 44.44%  done=1   <- ADMIT x1
+  35.790s  running=1  waiting=7(cap=7)  KV= 55.56%  done=1
+  69.825s  running=0  waiting=7(cap=7)  KV=  0.00%  done=2   <- COMPLETE x1 + ARRIVE x1
+  70.044s  running=1  waiting=6(cap=6)  KV= 44.44%  done=2   <- ADMIT x1
+  70.479s  running=1  waiting=7(cap=7)  KV= 55.56%  done=2
+ 104.495s  running=0  waiting=7(cap=7)  KV=  0.00%  done=3   <- COMPLETE x1 + ARRIVE x1
+ 104.714s  running=1  waiting=6(cap=6)  KV= 44.44%  done=3   <- ADMIT x1
+ 105.148s  running=1  waiting=7(cap=7)  KV= 55.56%  done=3
+
+=== summary ===
+{
+  "peak_kv": 0.7778,
+  "avg_kv": 0.7414,
+  "livelock_seconds": 0.0,
+  "inferred_preemptions": 0,
+  "inferred_admissions": 4,
+  "inferred_completions": 3,
+  "duration_s": 120.0,
+  "workers": 8,
+  "requests_started": 11,
+  "requests_completed": 7,
+  "requests_failed": 4,
+  "goodput_completions_per_min": 3.5,
+  "mean_latency_s": 126.07,
+  "p95_latency_s": 180.05,
+  "finish_reasons": {
+    "length": 7,
+    "failed": 4
+  },
+  "verdict": "no livelock detected (try more workers / fewer blocks)"
+}
+
+Saved: /home/ways_lab/repos/vllm-kv-throttle/agentic_preemption/results/preempt_20260812_093037

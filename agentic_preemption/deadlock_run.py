@@ -44,8 +44,11 @@ from prompts import SYSTEM_PROMPT, build_first_user  # noqa: E402
 METRICS_PATH = "/metrics"
 
 # ---------------------------------------------------------------- metrics ----
-GAUGES = ("num_requests_running", "num_requests_waiting", "kv_cache_usage_perc",
-          "num_preemptions_total")
+# NOTE: vLLM's `num_preemptions_total` is deliberately NOT scraped or recorded --
+# on this build it undercounts real preemptions ~200x (it counts distinct requests
+# preempted, not evictions), so it is misleading. We record the client-inferred
+# preemption/admission counts instead; use the probe mode for exact ground truth.
+GAUGES = ("num_requests_running", "num_requests_waiting", "kv_cache_usage_perc")
 
 
 def scrape(metrics_url: str) -> dict:
@@ -157,6 +160,8 @@ def sampler(args, stop: Event, state: State, out_dir: Path, summary: dict):
     livelock_seconds = 0.0
     livelock_started_at = None
     last_t = None
+    prev = None  # (running, waiting, completed, started) for cause inference
+    infer = {"PREEMPT": 0, "ADMIT": 0, "COMPLETE": 0, "ARRIVE": 0}
     while not stop.is_set():
         t = round(time.monotonic() - args.t_origin, 3)
         try:
@@ -170,35 +175,61 @@ def sampler(args, stop: Event, state: State, out_dir: Path, summary: dict):
         waiting = int(m.get("num_requests_waiting", 0))
         cap = int(m.get("waiting_capacity", 0))
         kv = m.get("kv_cache_usage_perc", 0.0)
-        preempt = int(m.get("num_preemptions_total", 0))
         peak_kv = max(peak_kv, kv); kv_sum += kv; kv_n += 1
+
+        # Infer the CAUSE of each transition from aggregate deltas. A request
+        # leaves `running` only by preemption or completion, and enters only by
+        # admission; new client requests add to `waiting`. So:
+        #   residual = Δrunning + completions = admissions - preemptions
+        # This labels every observed transition (PREEMPT/ADMIT/COMPLETE/ARRIVE),
+        # but because it's polled it can miss a preempt+admit pair that nets to
+        # zero between samples -> it UNDERCOUNTS like the metric (use the
+        # ground-truth probe mode for exact per-eviction counts). The direction is
+        # corroborated by KV (preempt frees blocks -> KV drops; admit -> KV rises).
+        cause = "steady"
+        if prev is not None:
+            d_run = running - prev[0]
+            c = max(0, completed - prev[2])
+            arrivals = max(0, started - prev[3])
+            residual = d_run + c            # admissions - preemptions
+            adm = residual if residual > 0 else 0
+            pre = -residual if residual < 0 else 0
+            parts = []
+            if c:        parts.append(f"COMPLETE x{c}");  infer["COMPLETE"] += c
+            if pre:      parts.append(f"PREEMPT x{pre}");  infer["PREEMPT"] += pre
+            if adm:      parts.append(f"ADMIT x{adm}");    infer["ADMIT"] += adm
+            if arrivals: parts.append(f"ARRIVE x{arrivals}"); infer["ARRIVE"] += arrivals
+            if parts:    cause = " + ".join(parts)
+        prev = (running, waiting, completed, started)
 
         kv_log.write(json.dumps({
             "at_seconds": t, "num_requests_running": running,
             "num_requests_waiting": waiting, "waiting_capacity": cap,
-            "kv_cache_usage_perc": kv, "num_preemptions_total": preempt,
+            "kv_cache_usage_perc": kv,
             "client_completions": completed, "client_started": started,
+            "cause": cause,
+            "inferred_preemptions": infer["PREEMPT"],   # cumulative, client-inferred
+            "inferred_admissions": infer["ADMIT"],
         }) + "\n"); kv_log.flush()
 
-        # rolling-window deltas for the watchdog
-        hist.append((t, completed, preempt))
-        compl_win = preempt_win = None
+        # rolling-window completion delta for the watchdog
+        hist.append((t, completed))
+        compl_win = None
         if len(hist) >= 2:
-            t0, c0, p0 = hist[0]
-            compl_win = completed - c0
-            preempt_win = preempt - p0
+            compl_win = completed - hist[0][1]
 
         key = (running, waiting)
         if key != last_key or kv >= 0.999:
+            tag = "" if cause == "steady" else f"   <- {cause}"
             event(f"{t:8.3f}s  running={running}  waiting={waiting}(cap={cap})  "
-                  f"KV={kv*100:6.2f}%  preempt={preempt}  done={completed}")
+                  f"KV={kv*100:6.2f}%  done={completed}{tag}")
             last_key = key
 
         # livelock / goodput-collapse: KV saturated, work in flight, but ~zero
         # completions across the whole window (preemptions are a secondary signal;
         # once the admitted set already fills KV the scheduler may simply queue the
         # rest, so we do NOT require the preempt counter to keep rising).
-        if compl_win is not None and preempt_win is not None:
+        if compl_win is not None:
             work_in_flight = (running + waiting) > 0
             livelock_now = (kv >= args.kv_livelock and compl_win == 0 and work_in_flight
                             and len(hist) == hist.maxlen)
@@ -207,8 +238,8 @@ def sampler(args, stop: Event, state: State, out_dir: Path, summary: dict):
             if livelock_now and not in_livelock:
                 in_livelock = True; livelock_started_at = t
                 event(f"{t:8.3f}s  *** LIVELOCK DETECTED *** KV={kv*100:.1f}%  "
-                      f"running={running} waiting={waiting}  preemptions={preempt}(+{preempt_win}/"
-                      f"{args.window:.0f}s)  completions/{args.window:.0f}s={compl_win} "
+                      f"running={running} waiting={waiting}  inferred_preemptions={infer['PREEMPT']}  "
+                      f"completions/{args.window:.0f}s={compl_win} "
                       f"-> KV is saturated and no run has finished for {args.window:.0f}s: "
                       f"admitted runs' context is thrown away / re-queued faster than any drains.")
             elif not livelock_now and in_livelock:
@@ -223,6 +254,10 @@ def sampler(args, stop: Event, state: State, out_dir: Path, summary: dict):
     summary["peak_kv"] = round(peak_kv, 4)
     summary["avg_kv"] = round(kv_sum / kv_n, 4) if kv_n else 0.0
     summary["livelock_seconds"] = round(livelock_seconds, 1)
+    # Client-inferred event tallies (undercount vs ground-truth probe mode).
+    summary["inferred_preemptions"] = infer["PREEMPT"]
+    summary["inferred_admissions"] = infer["ADMIT"]
+    summary["inferred_completions"] = infer["COMPLETE"]
     ev_log.close()
 
 
@@ -235,7 +270,8 @@ def main() -> None:
     p.add_argument("--workers", type=int, default=8)
     p.add_argument("--duration", type=float, default=300.0)
     p.add_argument("--max-tokens", type=int, default=4096)
-    p.add_argument("--sample-interval", type=float, default=0.25)
+    p.add_argument("--sample-interval", type=float, default=0.1,
+                   help="metrics poll interval (s); finer catches more transitions")
     p.add_argument("--window", type=float, default=10.0, help="watchdog sliding window (s)")
     p.add_argument("--kv-livelock", type=float, default=0.95, help="KV frac to call it saturated")
     p.add_argument("--timeout", type=float, default=180,

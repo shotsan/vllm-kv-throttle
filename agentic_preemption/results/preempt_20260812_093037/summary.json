@@ -1,0 +1,21 @@
+{
+  "peak_kv": 0.7778,
+  "avg_kv": 0.7414,
+  "livelock_seconds": 0.0,
+  "inferred_preemptions": 0,
+  "inferred_admissions": 4,
+  "inferred_completions": 3,
+  "duration_s": 120.0,
+  "workers": 8,
+  "requests_started": 11,
+  "requests_completed": 7,
+  "requests_failed": 4,
+  "goodput_completions_per_min": 3.5,
+  "mean_latency_s": 126.07,
+  "p95_latency_s": 180.05,
+  "finish_reasons": {
+    "length": 7,
+    "failed": 4
+  },
+  "verdict": "no livelock detected (try more workers / fewer blocks)"
+}

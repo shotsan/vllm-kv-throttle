@@ -1,0 +1,12 @@
+{
+  "worker": 1,
+  "marker": "Request w01-000001",
+  "start_at": 0.001,
+  "status": 200,
+  "latency_s": 133.63,
+  "finish_reason": "length",
+  "completion_tokens": 512,
+  "prompt_tokens": 1929,
+  "reasoning_content": "The user wants to refactor `metrics_pipeline.py`.\nThe current code has massive duplication.\nThere are `WEIGHT_XX` constants, `feature_XX` functions, and `window_XX` functions for XX from 00 to 10.\n`feature_XX` computes a weighted average of `value_XX` from records.\n`window_XX` computes a moving average over a series.\nBoth `feature_XX` and `window_XX` are identical except for the weight and the key/index used.\nActually, `feature_XX` uses `row.get(\"value_XX\", 0) * WEIGHT_XX`.\n`window_XX` just takes a series and size. It doesn't use a weight. Wait, `window_XX` is identical across all XX. It just computes a moving average.\nLet's check `window_XX`:\n```python\ndef window_00(series, size):\n    out = []\n    for start in range(0, len(series)):\n        chunk = series[start:start + size + 1]  # suspicious bound\n        out.append(sum(chunk) / (len(chunk) or 1))\n    return out\n```\nThis is exactly the same for all `window_XX`. So `window_XX` can be just `window(series, size)`.\nThe `feature_XX` functions are parameterized by weight and key. They can be unified into a single function `feature(records, weight, key)`.\nAlso, the `WEIGHT_XX` constants can be stored in a dictionary or list.\nThe `window` function has a \"suspicious bound\" comment. `series[start:start + size + 1]` means the window size is actually `size + 1`. Usually, a window of `size` means `series[start:start+size]`. I'll fix the bound to `size` or keep it but rename `size` to `window_size` and adjust the slice to `start + window_size`. I'll assume `size` means the number of elements in the window, so slice should be `start + size`. I'll fix it to `start + size`.\nAlso, `len(chunk) or 1` handles empty chunks, but with `start + size`, if `start + size > len(series)`, `chunk` will be shorter, so `len(chunk)` > 0. It's fine.",
+  "content": ""
+}

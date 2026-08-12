@@ -88,12 +88,52 @@ kills the wrong process. Match by port, or `kill <pid>` explicitly.)
 
 | File | What it is |
 |---|---|
-| `kv_metrics.jsonl` | per-sample timeline: `at_seconds, kv_cache_usage_perc, num_requests_running/waiting, waiting_capacity, num_preemptions_total, client_completions` |
-| `events.log` | human-readable transitions + `LIVELOCK DETECTED` markers |
-| `summary.json` | end-of-run verdict + totals (preemptions, peak/avg KV, goodput, livelock seconds) |
+| `kv_metrics.jsonl` | per-sample timeline incl. an inferred **`cause`** per transition (`at_seconds, kv_cache_usage_perc, num_requests_running/waiting, waiting_capacity, client_completions, cause, inferred_preemptions, inferred_admissions`). vLLM's `num_preemptions_total` is deliberately **omitted** — it undercounts ~200x and misleads |
+| `events.log` | human-readable transitions, each tagged with the inferred cause (`… <- PREEMPT x1`), + `LIVELOCK DETECTED` markers |
+| `summary.json` | verdict + totals, incl. `inferred_preemptions/admissions/completions` (client-side; undercounts — see below) |
 | `requests.jsonl` | one line per request (latency, finish_reason / timeout) |
 | `transcripts/` | code each **completed** run produced (empty when nothing finishes — that's the collapse) |
 | `run_meta.json` | run configuration |
+| `probe_events.jsonl` / `probe_summary.json` | **only in ground-truth probe mode** (below): the exact per-eviction events + true preemption counts |
+
+## Why is KV oscillating? (preemption vs admission)
+
+The `running=1/KV≈56%` ↔ `running=2/KV≈100%` oscillation is a request being **evicted
+(preempted) and re-admitted**. `num_preemptions_total` **cannot** tell you this — on this build it
+undercounts massively (measured **243 real preemptions reported as 1**). Two ways to see the truth:
+
+**A) Labeled transitions (always on, no setup).** Each transition in `events.log` / `kv_metrics.jsonl`
+is tagged with an inferred cause from the running/waiting/completion deltas (a request leaves
+`running` only by preemption or completion; enters only by admission):
+
+```text
+  12.3s  running=2  waiting=6(cap=6)  KV=100.00%  done=0   <- ADMIT x1
+  12.4s  running=1  waiting=7(cap=7)  KV= 55.56%  done=0   <- PREEMPT x1
+```
+
+This labels every *observed* transition correctly, but because it's polled it can miss a
+preempt+admit pair that nets to zero between samples — so `inferred_preemptions` **undercounts** the
+true rate (lower `--sample-interval` catches more).
+
+**B) Ground-truth probe mode (opt-in, exact).** Patch the vLLM scheduler to log every eviction, then
+parse it — this gives the *real* per-eviction counts and which request was thrown away:
+
+```bash
+python3 probe_patch.py apply                          # instrument the venv vLLM (reversible)
+#   ... start the server (log to a file) and run an experiment as usual ...
+MAX_MODEL_LEN=8192 NUM_GPU_BLOCKS=10 MAX_NUM_SEQS=10 ./run_server_preempt.sh 2>&1 | tee server.log
+SEED_TOKENS=1800 MAX_TOKENS=4096 WORKERS=8 DURATION=90 ./run_preempt.sh
+python3 parse_probe.py server.log --out results/preempt_<ts>/   # -> probe_events.jsonl + summary
+python3 probe_patch.py revert                         # ALWAYS restore the venv when done
+```
+
+`probe_events.jsonl` has one line per event — including **`ADMIT`** (with `req` id and
+`kind=new|resume`) and **`PREEMPT`** (with `req` id), so you can watch a single request bounce
+`ADMIT(resume) → PREEMPT → ADMIT(resume) → …`. `probe_summary.json` reports `true_preemptions`,
+`preemptions_per_request`, `total_admissions` / `re_admissions_after_preempt` (which should track
+`true_preemptions` — every eviction is followed by a resume), and the FREEREQ status split
+(RUNNING = preempt-frees vs FINISHED = completions). This is how we established Recipe C actually
+preempts one request **243×** while the metric said **1**.
 
 ## Knobs
 
@@ -128,7 +168,7 @@ A/B/C run on the **over-admitting** server and differ by **`MAX_TOKENS`** and **
 WORKERS=8 DURATION=120 MAX_TOKENS=4096 TIMEOUT=180 ./run_preempt.sh
 
 # B) Maximize visible preemptions (context thrown away repeatedly): small outputs -> fast
-#    turnover -> the admit→evict cycle repeats -> num_preemptions_total climbs (goodput > 0)
+#    turnover -> the admit→evict cycle repeats (see inferred_preemptions; goodput > 0)
 WORKERS=8 DURATION=120 MAX_TOKENS=512 TIMEOUT=180 ./run_preempt.sh
 
 # C) Prove it's a livelock, not a hang: same big outputs as (A) but give clients long patience,
@@ -153,3 +193,4 @@ SEED_TOKENS=6000 MAX_TOKENS=1500 WORKERS=8 DURATION=120 TIMEOUT=180 ./run_preemp
 > admission. Clean queueing needs a **large prompt** (`SEED_TOKENS`, so only one fits) **and** the
 > **admission guard ON** (`RESERVE_ISL=1`, a server flag) — i.e. a **server restart**. On the
 > over-admitting server a large prompt can still be chunk-prefill-admitted and then preempted.
+

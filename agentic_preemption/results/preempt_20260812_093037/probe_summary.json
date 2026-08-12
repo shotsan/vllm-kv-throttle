@@ -1,0 +1,32 @@
+{
+  "server_log": "/home/ways_lab/repos/vllm-kv-throttle/agentic_preemption/server_probe_20260812_092449.log",
+  "events_parsed": 64,
+  "by_type": {
+    "ADMIT": 9,
+    "FREEREQ": 11,
+    "POOLFREE": 44
+  },
+  "true_preemptions": 0,
+  "distinct_requests_preempted": 0,
+  "preemptions_per_request": {},
+  "total_admissions": 9,
+  "fresh_admissions": 9,
+  "re_admissions_after_preempt": 0,
+  "admissions_per_request": {
+    "chatcmpl-b4df19c69bd9a78e-bbc93576": 1,
+    "chatcmpl-844c95f072a72299-94a8a90d": 1,
+    "chatcmpl-90c92ac38a78972a-8af0384a": 1,
+    "chatcmpl-bb3ddb4293926c00-bb60627a": 1,
+    "chatcmpl-a2fcc409074364a0-b8d46837": 1,
+    "chatcmpl-bcdb1826051b96dc-b7906384": 1,
+    "chatcmpl-82cd3ecf0b1747ce-9848c6bf": 1,
+    "chatcmpl-b745134ff66bb29e-82b76da0": 1,
+    "chatcmpl-8a639a1ef41bc498-b0849822": 1
+  },
+  "freereq_status_split": {
+    "FINISHED_LENGTH_CAPPED": 7,
+    "FINISHED_ABORTED": 4
+  },
+  "computed_tokens_at_preempt": {},
+  "note": "true_preemptions is the ground truth; the vLLM num_preemptions_total metric typically reports only ~distinct_requests_preempted (a large undercount). re_admissions_after_preempt should track true_preemptions (each eviction is followed by a resume)."
+}

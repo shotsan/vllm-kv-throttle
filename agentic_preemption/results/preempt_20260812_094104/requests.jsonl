@@ -1,0 +1,9 @@
+{"worker": 0, "marker": "Request w00-000001", "start_at": 0.001, "status": 200, "latency_s": 86.711, "finish_reason": "length", "completion_tokens": 512, "prompt_tokens": 1929}
+{"worker": 1, "marker": "Request w01-000001", "start_at": 0.001, "status": 200, "latency_s": 133.63, "finish_reason": "length", "completion_tokens": 512, "prompt_tokens": 1929}
+{"worker": 6, "marker": "Request w06-000001", "start_at": 0.003, "status": "failed", "latency_s": 180.227, "error": "TimeoutError('timed out')"}
+{"worker": 3, "marker": "Request w03-000001", "start_at": 0.002, "status": "failed", "latency_s": 180.24, "error": "TimeoutError('timed out')"}
+{"worker": 7, "marker": "Request w07-000001", "start_at": 0.004, "status": "failed", "latency_s": 180.267, "error": "TimeoutError('timed out')"}
+{"worker": 2, "marker": "Request w02-000001", "start_at": 0.002, "status": "failed", "latency_s": 180.276, "error": "TimeoutError('timed out')"}
+{"worker": 4, "marker": "Request w04-000001", "start_at": 0.002, "status": "failed", "latency_s": 180.275, "error": "TimeoutError('timed out')"}
+{"worker": 5, "marker": "Request w05-000001", "start_at": 0.003, "status": "failed", "latency_s": 180.275, "error": "TimeoutError('timed out')"}
+{"worker": 0, "marker": "Request w00-000002", "start_at": 86.712, "status": 200, "latency_s": 105.423, "finish_reason": "length", "completion_tokens": 512, "prompt_tokens": 1929}

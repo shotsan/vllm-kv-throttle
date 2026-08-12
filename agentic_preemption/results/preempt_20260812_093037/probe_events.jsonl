@@ -1,0 +1,64 @@
+{"type": "ADMIT", "t": "08-12 09:30:37", "req": "chatcmpl-b4df19c69bd9a78e-bbc93576", "computed": 0, "kind": "new"}
+{"type": "FREEREQ", "t": "08-12 09:31:12", "req": "chatcmpl-b4df19c69bd9a78e-bbc93576", "computed": 7558, "status": "FINISHED_LENGTH_CAPPED", "npre": 0, "defer": "False"}
+{"type": "POOLFREE", "t": "08-12 09:31:12", "free_before": 2}
+{"type": "POOLFREE", "t": "08-12 09:31:12", "free_before": 3}
+{"type": "POOLFREE", "t": "08-12 09:31:12", "free_before": 4}
+{"type": "POOLFREE", "t": "08-12 09:31:12", "free_before": 5}
+{"type": "ADMIT", "t": "08-12 09:31:12", "req": "chatcmpl-844c95f072a72299-94a8a90d", "computed": 0, "kind": "new"}
+{"type": "FREEREQ", "t": "08-12 09:31:47", "req": "chatcmpl-844c95f072a72299-94a8a90d", "computed": 7558, "status": "FINISHED_LENGTH_CAPPED", "npre": 0, "defer": "False"}
+{"type": "POOLFREE", "t": "08-12 09:31:47", "free_before": 2}
+{"type": "POOLFREE", "t": "08-12 09:31:47", "free_before": 3}
+{"type": "POOLFREE", "t": "08-12 09:31:47", "free_before": 4}
+{"type": "POOLFREE", "t": "08-12 09:31:47", "free_before": 5}
+{"type": "ADMIT", "t": "08-12 09:31:47", "req": "chatcmpl-90c92ac38a78972a-8af0384a", "computed": 0, "kind": "new"}
+{"type": "FREEREQ", "t": "08-12 09:32:22", "req": "chatcmpl-90c92ac38a78972a-8af0384a", "computed": 7558, "status": "FINISHED_LENGTH_CAPPED", "npre": 0, "defer": "False"}
+{"type": "POOLFREE", "t": "08-12 09:32:22", "free_before": 2}
+{"type": "POOLFREE", "t": "08-12 09:32:22", "free_before": 3}
+{"type": "POOLFREE", "t": "08-12 09:32:22", "free_before": 4}
+{"type": "POOLFREE", "t": "08-12 09:32:22", "free_before": 5}
+{"type": "ADMIT", "t": "08-12 09:32:22", "req": "chatcmpl-bb3ddb4293926c00-bb60627a", "computed": 0, "kind": "new"}
+{"type": "FREEREQ", "t": "08-12 09:32:57", "req": "chatcmpl-bb3ddb4293926c00-bb60627a", "computed": 7558, "status": "FINISHED_LENGTH_CAPPED", "npre": 0, "defer": "False"}
+{"type": "POOLFREE", "t": "08-12 09:32:57", "free_before": 2}
+{"type": "POOLFREE", "t": "08-12 09:32:57", "free_before": 3}
+{"type": "POOLFREE", "t": "08-12 09:32:57", "free_before": 4}
+{"type": "POOLFREE", "t": "08-12 09:32:57", "free_before": 5}
+{"type": "ADMIT", "t": "08-12 09:32:57", "req": "chatcmpl-a2fcc409074364a0-b8d46837", "computed": 0, "kind": "new"}
+{"type": "FREEREQ", "t": "08-12 09:33:31", "req": "chatcmpl-a2fcc409074364a0-b8d46837", "computed": 7558, "status": "FINISHED_LENGTH_CAPPED", "npre": 0, "defer": "False"}
+{"type": "POOLFREE", "t": "08-12 09:33:31", "free_before": 2}
+{"type": "POOLFREE", "t": "08-12 09:33:31", "free_before": 3}
+{"type": "POOLFREE", "t": "08-12 09:33:31", "free_before": 4}
+{"type": "POOLFREE", "t": "08-12 09:33:31", "free_before": 5}
+{"type": "ADMIT", "t": "08-12 09:33:31", "req": "chatcmpl-bcdb1826051b96dc-b7906384", "computed": 0, "kind": "new"}
+{"type": "FREEREQ", "t": "08-12 09:33:38", "req": "chatcmpl-991b60a1d8ed3851-bd046e3d", "computed": 0, "status": "FINISHED_ABORTED", "npre": 0, "defer": "False"}
+{"type": "POOLFREE", "t": "08-12 09:33:38", "free_before": 3}
+{"type": "POOLFREE", "t": "08-12 09:33:38", "free_before": 3}
+{"type": "POOLFREE", "t": "08-12 09:33:38", "free_before": 3}
+{"type": "POOLFREE", "t": "08-12 09:33:38", "free_before": 3}
+{"type": "FREEREQ", "t": "08-12 09:33:38", "req": "chatcmpl-b62d069e85a5dbcd-af8b1832", "computed": 0, "status": "FINISHED_ABORTED", "npre": 0, "defer": "False"}
+{"type": "POOLFREE", "t": "08-12 09:33:38", "free_before": 3}
+{"type": "POOLFREE", "t": "08-12 09:33:38", "free_before": 3}
+{"type": "POOLFREE", "t": "08-12 09:33:38", "free_before": 3}
+{"type": "POOLFREE", "t": "08-12 09:33:38", "free_before": 3}
+{"type": "FREEREQ", "t": "08-12 09:33:38", "req": "chatcmpl-bcdb1826051b96dc-b7906384", "computed": 6280, "status": "FINISHED_ABORTED", "npre": 0, "defer": "False"}
+{"type": "POOLFREE", "t": "08-12 09:33:38", "free_before": 3}
+{"type": "POOLFREE", "t": "08-12 09:33:38", "free_before": 4}
+{"type": "POOLFREE", "t": "08-12 09:33:38", "free_before": 5}
+{"type": "POOLFREE", "t": "08-12 09:33:38", "free_before": 6}
+{"type": "ADMIT", "t": "08-12 09:33:38", "req": "chatcmpl-82cd3ecf0b1747ce-9848c6bf", "computed": 0, "kind": "new"}
+{"type": "FREEREQ", "t": "08-12 09:34:12", "req": "chatcmpl-82cd3ecf0b1747ce-9848c6bf", "computed": 7558, "status": "FINISHED_LENGTH_CAPPED", "npre": 0, "defer": "False"}
+{"type": "POOLFREE", "t": "08-12 09:34:12", "free_before": 2}
+{"type": "POOLFREE", "t": "08-12 09:34:12", "free_before": 3}
+{"type": "POOLFREE", "t": "08-12 09:34:12", "free_before": 4}
+{"type": "POOLFREE", "t": "08-12 09:34:12", "free_before": 5}
+{"type": "ADMIT", "t": "08-12 09:34:12", "req": "chatcmpl-b745134ff66bb29e-82b76da0", "computed": 0, "kind": "new"}
+{"type": "FREEREQ", "t": "08-12 09:34:47", "req": "chatcmpl-b745134ff66bb29e-82b76da0", "computed": 7558, "status": "FINISHED_LENGTH_CAPPED", "npre": 0, "defer": "False"}
+{"type": "POOLFREE", "t": "08-12 09:34:47", "free_before": 2}
+{"type": "POOLFREE", "t": "08-12 09:34:47", "free_before": 3}
+{"type": "POOLFREE", "t": "08-12 09:34:47", "free_before": 4}
+{"type": "POOLFREE", "t": "08-12 09:34:47", "free_before": 5}
+{"type": "ADMIT", "t": "08-12 09:34:47", "req": "chatcmpl-8a639a1ef41bc498-b0849822", "computed": 0, "kind": "new"}
+{"type": "FREEREQ", "t": "08-12 09:35:22", "req": "chatcmpl-8a639a1ef41bc498-b0849822", "computed": 7558, "status": "FINISHED_ABORTED", "npre": 0, "defer": "False"}
+{"type": "POOLFREE", "t": "08-12 09:35:22", "free_before": 2}
+{"type": "POOLFREE", "t": "08-12 09:35:22", "free_before": 3}
+{"type": "POOLFREE", "t": "08-12 09:35:22", "free_before": 4}
+{"type": "POOLFREE", "t": "08-12 09:35:22", "free_before": 5}

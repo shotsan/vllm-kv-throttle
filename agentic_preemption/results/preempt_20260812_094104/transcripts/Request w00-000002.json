@@ -1,0 +1,12 @@
+{
+  "worker": 0,
+  "marker": "Request w00-000002",
+  "start_at": 86.712,
+  "status": 200,
+  "latency_s": 105.423,
+  "finish_reason": "length",
+  "completion_tokens": 512,
+  "prompt_tokens": 1929,
+  "reasoning_content": "The user wants to refactor `metrics_pipeline.py`.\nThe current code has massive duplication.\nThere are functions `feature_XX` and `window_XX` for XX from 00 to 10.\nEach `feature_XX` computes a weighted average of a specific field `value_XX` in a list of dictionaries.\nEach `window_XX` computes a rolling average over a list of numbers.\nThe `window_XX` functions have a suspicious bound `size + 1` and handle empty chunks with `len(chunk) or 1`.\nThe `feature_XX` functions have no validation and assume `records` is a list of dicts.\nThere are constants `WEIGHT_XX`.\n\nI need to:\n1. Remove duplication by parameterizing the feature index and weight.\n2. Add type hints and docstrings.\n3. Fix bugs (e.g., `window` function division by zero handling, maybe `size + 1` is intentional or a bug? I'll assume it's a sliding window of size `size`, so `series[start:start+size]` is standard, but I'll keep the logic or fix it to be standard. Actually, `size + 1` might be intentional for a specific window size, but I'll parameterize it or fix it to `size`. I'll stick to `size` for clarity, or keep `size` as a parameter. I'll make `window` generic.)\n4. Add unit tests.\n\nLet's start by extracting the common logic into generic functions.\n`compute_feature(records: list[dict], key: str, weight: float) -> float`\n`compute_window(series: list[float], window_size: int) -> list[float]`\n\nWait, the original `window` functions use `size + 1`. I'll change it to `window_size` and document it. Or I'll just make it `window_size`.\nAlso, `feature` functions divide by `count`. If `records` is empty, it raises ZeroDivisionError. I should handle that or document it. I'll add a check or default to 0.0.\n\nLet's propose the first edit: Replace the duplicated `feature_XX` and `window_XX` functions with generic parameterized functions, and define the weights in a dictionary. Add type hints and docstrings.\n\nCode structure:\n```python\n\"\"\"metrics_pipeline.py -- trip-metrics aggregation.\"\"\"",
+  "content": ""
+}

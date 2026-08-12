@@ -33,15 +33,25 @@ server (guard OFF, small 1,800-token prompt) and differ only by `max_tokens`/`ti
 thrash. **D** flips two things — the **admission guard ON** (`RESERVE_ISL=1`, a server restart)
 and a **large 6,000-token prompt** — to get the *opposite*: clean queueing, no preemption.
 
-| Recipe | server / prompt | `max_tokens` | `timeout` | started → completed | preemptions (in-run) | shows | results dir |
-|---|---|---|---|---|---|---|---|
-| **A** | over-admit / 1800 | 4096 | 180 s | 8 → **0** | +1 | goodput collapse — "nothing gets done" | `results/preempt_20260810_184406/` |
-| **B** | over-admit / 1800 | 512 | 180 s | 9 → 4 | **+173** | preemption churn — context thrown away repeatedly | `results/preempt_20260810_190411/` |
-| **C** | over-admit / 1800 | 4096 | 1200 s | 8 → 2 (at 535 s & 1034 s) | +1 | **livelock, not deadlock** — oldest slowly drains | `results/preempt_20260810_190936/` |
-| **D** | **guard ON / 6000** | 1500 | 180 s | 11 → **8** | **0** | **clean queue (parent throttle)** — 1 running, 7 waiting, serial drain | `results/preempt_20260811_082636/` |
+| Experiment | Details | Workers | Duration of Run | Max Output Tokens | Timeout | num started → completed | preemption thrash? (KV oscillates) | results dir |
+|---|---|---|---|---|---|---|---|---|
+| **A** | over-admit server, 1800-tok prompt — goodput collapse ("nothing gets done") | 8 | 120 s | 4096 | 180 s | 8 → **0** | **yes** (100%↔56%) | `results/preempt_20260810_184406/` |
+| **B** | over-admit server, 1800-tok prompt — preemption churn with turnover (short outputs) | 8 | 120 s | 512 | 180 s | 9 → 4 | **yes** (100%↔56%) | `results/preempt_20260810_190411/` |
+| **C** | over-admit server, 1800-tok prompt — **livelock, not deadlock** (oldest slowly drains at 535 s & 1034 s) | 8 | 120 s | 4096 | 1200 s | 8 → 2 | **yes** (100%↔56%) | `results/preempt_20260810_190936/` |
+| **D** | **guard ON, 6000-tok prompt** — **clean queue (parent throttle)**: 1 running, 7 waiting, serial drain | 8 | 120 s | 1500 | 180 s | 11 → **8** | **no** (KV steady ~74%) | `results/preempt_20260811_082636/` |
 
-Pick **B** to watch the evictions, **C** to prove progress still happens, **A** for the starkest
-"nothing finished," **D** for the well-behaved contrast (admission control, no thrash).
+> ⚠️ **The `num_preemptions_total` metric is unreliable on this build — do not use it to gauge
+> thrash.** Source-level instrumentation of the scheduler (probes in `_preempt_request` /
+> `_free_request_blocks`, then reverted) measured **243 real preemptions of a single request** in a
+> 90 s re-run of Recipe C, while `num_preemptions_total` reported **1** — a ~243× undercount (it
+> appears to count each *distinct* request only once, not each eviction). **The reliable tell of
+> preemption thrash is the KV-usage oscillation** (100% ↔ 56% = a request's blocks freed on
+> preemption, then re-allocated on re-admit). By that measure **A, B, and C all thrash heavily**;
+> only **D** (steady KV, no oscillation) is genuinely preemption-free.
+
+Pick **A** for the starkest "nothing finished," **B** to see thrash *with* turnover (short
+outputs), **C** to prove progress still eventually happens, **D** for the well-behaved contrast
+(clean admission control, no thrash).
 
 ---
 
@@ -55,8 +65,10 @@ Pick **B** to watch the evictions, **C** to prove progress still happens, **A** 
 - **Cache pinned full:** KV usage peaks at 100%, averages ~79%, oscillating **100% ↔ 56%**.
 - **Only ~2 run at once:** `running` flips between 1 and 2 (never more); the other **6–7 sit
   queued** the entire time.
-- **Context thrown away:** a preemption fires early (`num_preemptions_total` → 1) — a running
-  run's KV is discarded and re-queued.
+- **Context thrown away, repeatedly:** the KV **100%↔56% oscillation is preemption thrash** — a
+  request's blocks are freed on preemption (KV drops) and re-allocated on re-admit (KV rises), over
+  and over. (`num_preemptions_total` reads ~1 here but is a ~243× undercount — see the note above;
+  the oscillation is the true signal.)
 - **Livelock flagged for 56.7 s** of the 120 s run (KV saturated + zero completions).
 
 **The picture:** two ~5,900-token sequences can't both fit in an 11,702-token cache, so it
@@ -72,17 +84,20 @@ before its 180 s deadline. From the client's side, **nothing ever gets done.**
 **Config:** 8 workers · 120 s · **`max_tokens=512`** · `timeout=180 s`
 
 Same tiny cache, but each run generates only 512 tokens, so requests finish faster and **new ones
-keep arriving** — the admit→evict cycle repeats constantly:
+keep arriving** — turnover on top of the same preemption thrash:
 
-- **Preemptions explode: +173 during the run** (vs. just +1 in Recipe A). This is the literal
-  "throw away a run's context" happening over and over.
+- **`num_preemptions_total` reads +173** here vs. ~+1 in A/C — but that difference is **not** "B
+  preempts and A/C don't." A and C thrash just as hard (KV oscillates identically); B's counter is
+  higher only because **more *distinct* requests get preempted** thanks to turnover, and the metric
+  counts distinct requests, not evictions (see the note above). The real per-eviction rate in A/C is
+  in the hundreds too.
 - **Turnover:** 9 requests started (more than 8 workers — some finished and were relaunched);
   **4 completed**, 5 timed out. Goodput is nonzero but tiny (2/min).
 - Even a 512-token request took **85–177 s** to finish under the contention.
-- KV still pinned (avg 79%, peak 100%), livelock flagged 52 s.
+- KV still pinned (avg 79%, peak 100%, oscillating), livelock flagged 52 s.
 
-**Takeaway:** shorter outputs trade "nothing completes" for "constant preemption" — the cache
-churns visibly (173 evictions) while goodput stays crippled.
+**Takeaway:** shorter outputs add **turnover** to the thrash — more distinct requests cycle through,
+completions happen, but goodput stays crippled and the cache churns constantly.
 
 ---
 
@@ -96,13 +111,19 @@ Identical to Recipe A except clients wait up to 20 minutes instead of 180 s:
 - **Requests do eventually finish** — 2 completed, at **535 s and 1,034 s** (≈9 and ≈17 minutes)
   — draining **one at a time, oldest-first**, exactly as vLLM's forward-progress guarantee
   predicts. The other 6 ran out of even the 1,200 s patience.
-- Barely any preemption during the run (+1): with long outputs there's no turnover, so it's the
-  same queue-and-stall regime as Recipe A — just observed for longer.
+- **Heavy preemption thrash (measured directly).** An instrumented re-run of this exact config
+  recorded **243 preemptions of a single starved request** in 90 s — it is admitted, prefills ~1
+  block (~2,047 tokens), is **preempted (blocks freed → KV 100%→56%)**, re-admitted, prefills the
+  same block **again**, and is preempted **again**, making **zero net progress**; its context is
+  discarded and recomputed every cycle. Meanwhile the **oldest** request is protected from
+  preemption and grinds forward. (`num_preemptions_total` reported **1** for that run — the ~243×
+  undercount from the note above. My earlier "C stalls / barely preempts" reading was wrong; it was
+  based on that broken metric.)
 
 **Takeaway:** this is the proof that it's a **livelock, not a true deadlock.** The system never
-fully stops; the oldest request grinds to completion (17 minutes for what normally takes ~30–60 s)
-while everything newer starves. Recipe A only *looked* total because its 180 s patience cut off
-before any request could drain.
+fully stops — the oldest request grinds to completion (17 minutes for what normally takes ~30–60 s)
+while a newer request is preempted hundreds of times and everything else starves. Recipe A only
+*looked* total because its 180 s patience cut off before the oldest could drain.
 
 ---
 
@@ -129,7 +150,10 @@ whole prompt" and the guard would be redundant — the large prompt alone would 
 server has chunked prefill ON, so the guard is the insurance that closes that loophole.)
 
 What we observed — exactly the parent's behavior:
-- **0 preemptions** the entire run (nothing's context ever thrown away).
+- **No preemption thrash** — and here that's trustworthy: KV sits **steady at ~74%** with **no
+  100%↔56% oscillation** (the reliable tell), so `num_preemptions_total = 0` is corroborated, unlike
+  the A/C case where the metric undercounts. Only one request is ever admitted, so there is nothing
+  to preempt.
 - **1 running, 7 waiting** for essentially every sample (running=1 in 460/465 samples).
 - **11 started → 8 completed** (`finish_reason=length`), **goodput 4/min** (vs 0 in Recipe A).
 - **Serial drain:** completion latencies **36 s, 70 s, 105 s, 139 s, 173 s** — rising in ~34 s

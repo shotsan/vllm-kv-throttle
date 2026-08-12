@@ -1,0 +1,21 @@
+{
+  "peak_kv": 1.0,
+  "avg_kv": 0.7927,
+  "livelock_seconds": 51.4,
+  "inferred_preemptions": 232,
+  "inferred_admissions": 234,
+  "inferred_completions": 1,
+  "duration_s": 120.0,
+  "workers": 8,
+  "requests_started": 9,
+  "requests_completed": 3,
+  "requests_failed": 6,
+  "goodput_completions_per_min": 1.5,
+  "mean_latency_s": 108.59,
+  "p95_latency_s": 133.63,
+  "finish_reasons": {
+    "length": 3,
+    "failed": 6
+  },
+  "verdict": "LIVELOCK / goodput-collapse observed"
+}
