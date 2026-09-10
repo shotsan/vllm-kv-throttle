@@ -103,6 +103,45 @@ position (mean 399 s, p95 654 s); gate wait is a steady ~78 s per position.
 | mean / p95 latency | 711 s / 938 s | 399 s / 654 s |
 | peak KV (avg) | 100% (78.5%) | 66.7% (57.8%) |
 
+### Per-request latency (by completion rank, fastest → slowest)
+
+Same workload each run — every request is 1,929 prompt + 4,096 generated tokens.
+Ranked because the runs completed different counts (bypass admitted 8; kv-gate's
+serialization let a freed worker send a 9th within the window).
+
+kv-gate is strictly serial (`running=1`; gateway admits one every ~82 s), so its
+requests **complete one at a time** — the near-equal rank-8/9 *latencies* below are
+a queue coincidence (w2's 2nd request arrived ~82 s later **and** finished ~82 s
+later, so its *duration* matches w6's); their wall-clock finishes are 82 s apart.
+Latency = finish − arrival; arrival ≠ 0 once a worker is on its 2nd request.
+
+| rank (finish order) | bypass latency (outcome) | kv-gate: arrival → finish = latency |
+|---|---|---|
+| 1 | 485.1 s ✅ length | 0.0 → 81.7 = 81.7 s ✅ |
+| 2 | 937.7 s ✅ length | 0.0 → 163.3 = 163.3 s ✅ |
+| 3 | 1200.1 s ✗ timeout | 0.0 → 244.9 = 244.9 s ✅ |
+| 4 | 1200.1 s ✗ timeout | 0.0 → 326.5 = 326.5 s ✅ |
+| 5 | 1200.2 s ✗ timeout | 0.0 → 408.3 = 408.3 s ✅ |
+| 6 | 1200.2 s ✗ timeout | 0.0 → 490.1 = 490.1 s ✅ |
+| 7 | 1200.2 s ✗ timeout | 0.0 → 571.9 = 571.9 s ✅ |
+| 8 | 1200.2 s ✗ timeout | 0.0 → 653.7 = 653.7 s ✅ |
+| 9 | — | 81.7 → 735.6 = 653.9 s ✅ |
+
+The bypass `1200.x s` rows are the **client timeout, not a true latency** — those
+requests never finished, so their real latency is unbounded (≥ 1200 s is a floor).
+kv-gate is a clean **~81.7 s staircase** (one request's service time at ~50 tok/s;
+each queue position adds ~82 s), and every request gets the **whole KV to itself** —
+no sharing, no preemption. Even bypass's *two survivors* (485 s, 938 s) are slower
+than the *slowest* kv-gate finish (735.6 s wall-clock / 653.9 s latency), because the
+thrashing server keeps re-prefilling their neighbours instead of decoding them.
+
+**Cost of one preemption** (from these two runs): bypass request 1 took 485.1 s vs
+kv-gate's clean 81.7 s service → 403.4 s of overhead. Over the 2,620 preemptions
+(spanning 1,195 s → 2.19/s, ≈ 1,062 during request 1's flight) that is
+**≈ 0.38 s per preemption**, i.e. almost exactly one re-prefill of the 1,929-token
+prompt (~5,200 tok/s). Aggregate: ~970 s of the run's wall-clock burned on
+discarded re-prefills.
+
 The external KV controller turns in-engine thrash into out-of-engine queueing on an
 unchanged server: **preemptions 2620 → 0, and every request completes (2/8 → 9/9)**
 — with *lower* latency than the thrashing baseline, since work is never thrown
